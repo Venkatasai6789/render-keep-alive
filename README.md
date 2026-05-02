@@ -8,12 +8,13 @@ going to sleep by pinging itself and an external URL every **14 minutes**.
 Render free-tier web services are spun down after 15 minutes of inactivity.
 This service runs two HTTP GET requests every 14 minutes:
 
-1. **Self-ping** — hits its own `/ping` endpoint to keep itself awake.
+1. **Self-ping** — hits its own `/ping` endpoint (with a cache-busting timestamp)
+   to keep itself awake.
 2. **External ping** — hits `https://radio.kalasalingam.ac.in/` (with a
    cache-busting timestamp) to keep a second service awake.
 
-Cold-start timeouts (2–5 minutes) are handled gracefully via `AbortController`
-and logged as expected behaviour.
+Cold-start timeouts (2–5 minutes) are handled gracefully via
+`AbortSignal.timeout()` and logged as expected behaviour.
 
 ## Endpoints
 
@@ -44,4 +45,4 @@ Optionally set `EXTERNAL_URL` to override the default external ping target
 
 ## Requirements
 
-- Node.js ≥ 18 (uses the native `fetch` API and `AbortController`)
+- Node.js ≥ 18 (uses the native `fetch` API and `AbortSignal.timeout()`)

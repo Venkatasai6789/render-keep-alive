@@ -61,7 +61,7 @@ app.get('/ping', (_req, res) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch a URL with a strict timeout enforced via AbortController.
+ * Fetch a URL with a strict timeout enforced via AbortSignal.timeout.
  *
  * Render free-tier cold-starts can take 2–5 minutes, so the external target
  * may not respond within the timeout window. Aborting the request cleanly
@@ -71,14 +71,13 @@ app.get('/ping', (_req, res) => {
  * @param {string} label - A short label used in log messages.
  */
 async function pingUrl(url, label) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
   try {
-    const response = await fetch(url, { signal: controller.signal });
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+    });
     console.log(`[ping] ${label} → HTTP ${response.status}`);
   } catch (err) {
-    if (err.name === 'AbortError') {
+    if (err.name === 'TimeoutError') {
       // Expected during cold-starts — not a critical failure.
       console.log(
         `[ping] ${label} → request timed out after ${FETCH_TIMEOUT_MS / 1000}s ` +
@@ -87,8 +86,6 @@ async function pingUrl(url, label) {
     } else {
       console.error(`[ping] ${label} → unexpected error: ${err.message}`);
     }
-  } finally {
-    clearTimeout(timer);
   }
 }
 
@@ -106,12 +103,12 @@ async function pingUrl(url, label) {
 async function runPingCycle() {
   console.log(`[ping] Cycle started at ${new Date().toISOString()}`);
 
-  // Self-ping
-  await pingUrl(`${SELF_URL}/ping`, 'self');
+  const timestamp = Date.now();
 
-  // External ping — append a unique timestamp to bust CDN caches.
-  const externalUrlWithBust = `${EXTERNAL_URL}?ping=${Date.now()}`;
-  await pingUrl(externalUrlWithBust, 'external');
+  await Promise.allSettled([
+    pingUrl(`${SELF_URL}/ping?bust=${timestamp}`, 'self'),
+    pingUrl(`${EXTERNAL_URL}?ping=${timestamp}`, 'external')
+  ]);
 }
 
 // Fire immediately on startup, then schedule the next cycle only after the
