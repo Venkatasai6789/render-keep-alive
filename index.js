@@ -77,7 +77,7 @@ async function pingUrl(url, label) {
     });
     console.log(`[ping] ${label} → HTTP ${response.status}`);
   } catch (err) {
-    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+    if (err.name === 'TimeoutError') {
       // Expected during cold-starts — not a critical failure.
       console.log(
         `[ping] ${label} → request timed out after ${FETCH_TIMEOUT_MS / 1000}s ` +
