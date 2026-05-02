@@ -1,0 +1,16 @@
+{
+  "name": "render-keep-alive",
+  "version": "1.0.0",
+  "description": "Lightweight Express service that pings itself and an external URL every 14 minutes to bypass Render free-tier inactivity timeouts.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "license": "MIT"
+}
